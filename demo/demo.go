@@ -19,9 +19,9 @@ import (
 
 var (
 	errorTemplate  = template.MustParseFile("templates/error.html", nil)
-	viewTemplate   *template.Template // set up in init()
 	uploadTemplate = template.MustParseFile("templates/upload.html", nil)
-	
+	viewTemplate   *template.Template // set up in init()
+	decryptTemplate   *template.Template // set up in init()
 )
 
 // Image is the type used to hold the image in the datastore.
@@ -31,12 +31,18 @@ type Image struct {
 
 func init() {
 	http.HandleFunc("/", errorHandler(upload))	
+	http.HandleFunc("/decrypt", errorHandler(decrypt))	
 	http.HandleFunc("/img", errorHandler(img))
 	http.HandleFunc("/view", errorHandler(view))	
 	viewTemplate = template.New(nil)
         viewTemplate.SetDelims("{{{", "}}}")
         if err := viewTemplate.ParseFile("templates/view.html"); err != nil {
                 panic("can't parse view.html: " + err.String())
+        }
+	decryptTemplate = template.New(nil)
+        decryptTemplate.SetDelims("{{{", "}}}")
+        if err := decryptTemplate.ParseFile("templates/decrypt.html"); err != nil {
+                panic("can't parse decrypt.html: " + err.String())
         }
 }
 
@@ -47,6 +53,7 @@ func keyOf(data []byte) string {
         return fmt.Sprintf("%x", string(sha.Sum())[0:8])
 }
 
+// decrypt is the HTTP handler for uploading images; it handles "/".
 func upload (w http.ResponseWriter, r *http.Request) {
         if r.Method != "POST" {
                 // No upload; show the upload form.
@@ -92,7 +99,7 @@ func upload (w http.ResponseWriter, r *http.Request) {
                 i = resize.Resize(i, i.Bounds(), w, h)
         }
 
-        // Encode as a new JPEG image.
+        // Encode as a new JPEG image with the hidden text
         buf.Reset()
         err = strogonoff.Encode(&buf, i, msg, nil)
         check(err)
@@ -107,6 +114,27 @@ func upload (w http.ResponseWriter, r *http.Request) {
 
         // Redirect to /view using the key.
         http.Redirect(w, r, "/view?id="+key.StringID(), http.StatusFound)
+}
+
+// decrypt is the HTTP handler for decrypting images; it handles "/decrypt".
+func decrypt(w http.ResponseWriter, r *http.Request) {
+        if r.Method != "POST" {
+                // No upload; show the upload form.
+                decryptTemplate.Execute(w, "<i>Please upload an image first.</i>")
+                return
+        }
+
+        f, _, err := r.FormFile("image")
+        check(err)
+        defer f.Close()
+
+        // Grab the image data and read text
+        var buf bytes.Buffer
+        io.Copy(&buf, f)
+        _, msg, err := strogonoff.DecodeAndRead(&buf)
+        check(err)
+
+        decryptTemplate.Execute(w, msg)
 }
 
 // view is the HTTP handler for viewing images (html page); it handles "/view".

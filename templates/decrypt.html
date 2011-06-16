@@ -5,22 +5,17 @@
 <body>
 	<div style="margin-left: 200px;">
 	<p>This is a <a href="https://github.com/jbochi/strogonoff/">Strogonoff</a> demo.</p>
-	<p>Upload an image and type the message you want to hide:</p>
-	<form action="/" method="POST" enctype="multipart/form-data">
+	<p>Upload the image you want to decrypt:</p>
+	<form action="/decrypt" method="POST" enctype="multipart/form-data">
 		<p>
 			<label>File:</label>
 			<input type="file" name="image"></input>
 		</p>
 		<p>
-			<label>Message:</label>
-			<input name="message"></input>
-		</p>
-		<p>
 			<input type="submit" value="Upload"></input>
 		</p>
 	</form>
-	<p>Click <a href="/decrypt">here to reveal the text in an image</a></p>
-	</div>
+	<p>Revelead text: {{{@}}}</div>
 	<a href="http://github.com/jbochi/strogonoff-demo/"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://d3nwyuy0nl342s.cloudfront.net/img/edc6dae7a1079163caf7f17c60495bbb6d027c93/687474703a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f6c6566745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub"></a>
 </body>
 </html>
